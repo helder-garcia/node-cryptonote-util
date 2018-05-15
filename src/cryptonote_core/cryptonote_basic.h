@@ -481,9 +481,13 @@ namespace cryptonote
     BEGIN_SERIALIZE()
       VARINT_FIELD(major_version)
       VARINT_FIELD(minor_version)
-      VARINT_FIELD(timestamp)
+      if (BLOCK_MAJOR_VERSION_1 == major_version) {
+        VARINT_FIELD(timestamp)
+      }
       FIELD(prev_id)
-      FIELD(nonce)
+      if (BLOCK_MAJOR_VERSION_1 == major_version) {
+        FIELD(nonce)
+      }
     END_SERIALIZE()
   };
 
@@ -496,6 +500,10 @@ namespace cryptonote
 
     BEGIN_SERIALIZE_OBJECT()
       FIELDS(*static_cast<block_header *>(this))
+      if (BLOCK_MAJOR_VERSION_2 <= major_version) {
+        auto sbb = make_serializable_bytecoin_block(*this, false, false);
+        FIELD_N("parent_block", sbb);
+      }
       FIELD(miner_tx)
       FIELD(tx_hashes)
     END_SERIALIZE()
@@ -562,12 +570,12 @@ namespace cryptonote
   struct integrated_address {
           account_public_address adr;
           crypto::hash8 payment_id;
-    
+
           BEGIN_SERIALIZE_OBJECT()
           FIELD(adr)
           FIELD(payment_id)
           END_SERIALIZE()
-    
+
           BEGIN_KV_SERIALIZE_MAP()
           KV_SERIALIZE(adr)
           KV_SERIALIZE(payment_id)
